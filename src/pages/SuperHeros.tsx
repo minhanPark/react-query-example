@@ -1,17 +1,7 @@
+import { info } from "console";
 import React from "react";
-import { useQuery } from "react-query";
-import { superHerosInstance } from "../lib/AxiosInstance";
-
-const heroFun = async () => {
-  const { data } = await superHerosInstance("/superheros");
-  return data;
-};
-
-interface Hero {
-  id: number;
-  name: string;
-  alterEgo: string;
-}
+import { useSuperHerosData } from "../hooks/useSuperheroData";
+import { Link } from "react-router-dom";
 
 const SuperHeros: React.FC = () => {
   const handleSuccess = (data: any) => {
@@ -21,14 +11,8 @@ const SuperHeros: React.FC = () => {
   const handleError = (error: any) => {
     console.log("Perform side effect after data error", error);
   };
-  const { isLoading, data, isError, error, isFetching, refetch } = useQuery<
-    Hero[],
-    Error
-  >("super-hero", heroFun, {
-    enabled: false,
-    onSuccess: handleSuccess,
-    onError: handleError,
-  });
+  const { isLoading, data, isError, error, isFetching, refetch } =
+    useSuperHerosData(handleSuccess, handleError);
 
   console.log(isLoading, isFetching);
 
@@ -44,9 +28,14 @@ const SuperHeros: React.FC = () => {
       <div>
         <button onClick={() => refetch()}>불러오기</button>
       </div>
-      {data?.map((hero) => {
+      {/* {data?.map((hero) => {
         return <div key={hero.id}>{hero.name}</div>;
-      })}
+      })} */}
+      {data?.map((hero) => (
+        <div key={hero.id}>
+          <Link to={`/super-heros/${hero.id}`}>{hero.name}</Link>
+        </div>
+      ))}
     </>
   );
 };

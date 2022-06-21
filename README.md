@@ -161,3 +161,124 @@ const { isLoading, data, isError, error, isFetching, refetch } = useQuery<
 
 옵션중에 onSuccess는 fetch에 성공한 후 사이드 이펙트를 발생시킬 때, onError는 fetch에 실해한 후 사이드 이펙트를 발생시킬 때 사용한다.  
 각각 파라미터를 하나씩 가지는데, onSuccess는 data(fetch한 데이터), onError은 error(에러 객체)를 가진다.
+
+## select
+
+useQuery에서 select를 활용하면 데이터를 변경하거나 특정 부분만 선택할 수 있다.
+
+```js
+const {...} = useQuery<
+    Hero[],
+    Error
+  >("super-hero", heroFun, {
+    enabled: false,
+    onSuccess: handleSuccess,
+    onError: handleError,
+    select: (data) => {
+      return data.map((info) => ({ ...info, name: info.name + "RW" }));
+    },
+  });
+```
+
+위와같이 사용할 수 있고, 그러면 data의 값이 바뀐다.
+
+## query by id
+
+```js
+const heroDetailFun = async (heroId) => {
+  const { data } = await superHerosInstance(`/superheros/${heroId}`);
+  return data;
+};
+
+export const useSuperHerosDetailData = (heroId: string | undefined) => {
+  return useQuery(["super-hero", heroId], () => heroDetailFun(heroId));
+};
+```
+
+위와 같이 id 등의 값으로 특정 쿼리를 부를 수 있다. 아니면 기본적으로 쿼리키 부분이 전달되기 때문에 아래와 같이 설정할 수도 있다.
+
+```js
+const heroDetailFun = async ({ queryKey }) => {
+  const { data } = await superHerosInstance(`/superheros/${queryKey[1]}`);
+  return data;
+};
+
+export const useSuperHerosDetailData = (heroId: string | undefined) => {
+  return useQuery < Hero, Error > (["super-hero", heroId], heroDetailFun);
+};
+```
+
+그래서 쿼리키 부분을 확인해보니 **["super-hero", heroId]** 우리가 넣었던 이부분이 들어왔고, 여기서 1번을 사용한 것이다.  
+어디서 쿼리키를 가져온 것인 지 콘솔을 찍어보니 기본적으로 들어오는 값이 아래와 같았다.
+
+```js
+{
+    "queryKey": [
+        "super-hero",
+        "1"
+    ],
+    "signal": {},
+    pageParam: undefined,
+    meta: undefined
+}
+```
+
+어떤 값들인지는 또 알아봐야 할듯
+
+## Parallel Query
+
+Parallel Query는 병렬로 실행되거나 동시성을 최대화하기 위해 실행되는 쿼리이다.  
+일반적으로 한 페이지에서 여러개의 쿼리를 실행시키는 방법은 useQuery를 실행시켜주는 것이다.
+
+```js
+function App () {
+   // The following queries will execute in parallel
+   const usersQuery = useQuery('users', fetchUsers)
+   const teamsQuery = useQuery('teams', fetchTeams)
+   const projectsQuery = useQuery('projects', fetchProjects)
+   ...
+ }
+```
+
+> 만약 서스센스 모드라면 이 패턴은 동작하지 않는다. 첫번째 쿼리가 내부적으로 프로미스를 던지면 다른 쿼리가 동작하기 전에 일시 중단(suspend) 하기 때문이다. 이럴경우엔 useQueries를 사용해라.
+
+useQueries를 사용하면 아래처럼 하면 된다.
+
+```js
+const queryResults = useQueries([
+  {
+    queryKey: "superheros",
+    queryFn: heroFun,
+  },
+  {
+    queryKey: "superfriends",
+    queryFn: friendsFun,
+  },
+]);
+```
+
+queryResults를 확인해보면 상태값들이 배열로 담겨져서 반환되는 것을 확인할 수 있다.
+
+## dependent query
+
+의존 상태로 부를 수 있는 방법은 enabled에 조건을 추가하는 것이다.
+
+```js
+const { data: user } = useQuery(["user", email], getUserByEmail);
+
+const userId = user?.id;
+
+// Then get the user's projects
+const { isIdle, data: projects } = useQuery(
+  ["projects", userId],
+  getProjectsByUser,
+  {
+    // The query will not execute until the userId exists
+    enabled: !!userId,
+  }
+);
+```
+
+그러면 예시처럼 user를 불러왔을 때 userId의 값이 undefined 일 지 아니면 id가 담길 지 결정될 것인데 !!을 통해서 해당 값을 불린으로 바꾸어서 의존적인 마운트를 할 수 있다.
+
+> 만약 숫자 0 같은 falsy 값은 주의하자 !!을 붙이면 false가 될 것이다.

@@ -4,6 +4,9 @@ import { Routes, Link, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import SuperHeros from "./pages/SuperHeros";
 import styled from "styled-components";
+import SuperHeroDetail from "./Components/SuperHeroDetail";
+import Parallel from "./pages/Parallel";
+import Dependent from "./pages/Dependent";
 
 const StyledUl = styled.ul`
   display: flex;
@@ -29,12 +32,23 @@ function App() {
           <StyledLi>
             <Link to="/super-heros">SuperHeros</Link>
           </StyledLi>
+          <StyledLi>
+            <Link to="/parallel">Parallel</Link>
+          </StyledLi>
+          <StyledLi>
+            <Link to="/dependent">Dependent</Link>
+          </StyledLi>
         </StyledUl>
       </nav>
       <Routes>
         <Route>
           <Route path="/" element={<Home />} />
-          <Route path="/super-heros" element={<SuperHeros />} />
+          <Route path="/super-heros">
+            <Route index element={<SuperHeros />} />
+            <Route path=":heroId" element={<SuperHeroDetail />} />
+          </Route>
+          <Route path="/parallel" element={<Parallel />} />
+          <Route path="/dependent" element={<Dependent />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
