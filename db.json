@@ -14,6 +14,71 @@
       "id": 3,
       "name": "Wonder Woman",
       "alterEgo": "Princess Diana"
+    },
+    {
+      "name": "Runiingwat",
+      "alterEgo": "Parkmun",
+      "id": 4
+    },
+    {
+      "name": "Hero2",
+      "alterEgo": "Hero2",
+      "id": 5
+    },
+    {
+      "name": "sss",
+      "alterEgo": "cccc",
+      "id": 6
+    },
+    {
+      "name": "sss",
+      "alterEgo": "cccc",
+      "id": 7
+    },
+    {
+      "name": "test",
+      "alterEgo": "tester",
+      "id": 8
+    },
+    {
+      "name": "tttteee",
+      "alterEgo": "ttetetetet",
+      "id": 9
+    },
+    {
+      "name": "tttteee",
+      "alterEgo": "ttetetetet",
+      "id": 10
+    },
+    {
+      "name": "RWRW",
+      "alterEgo": "RWRW",
+      "id": 11
+    },
+    {
+      "name": "aabbe",
+      "alterEgo": "aabe",
+      "id": 12
+    },
+    {
+      "name": "aabbeass",
+      "alterEgo": "aabesdsd",
+      "id": 13
+    },
+    {
+      "name": "aabbeassssd",
+      "alterEgo": "aabesdsdsdsd",
+      "id": 14
+    },
+    {
+      "name": "RWROMji",
+      "alterEgo": "JIJUKS",
+      "id": 15
+    },
+    {
+      "name": "아베에에",
+      "alterEgo": "오보보",
+      "id": 16
     }
   ],
   "friends": [
@@ -26,8 +91,46 @@
       "name": "Min"
     },
     {
-      "id": 1,
+      "id": 3,
       "name": "Han"
+    }
+  ],
+  "colors": [
+    {
+      "id": 1,
+      "label": "red"
+    },
+    {
+      "id": 2,
+      "label": "orange"
+    },
+    {
+      "id": 3,
+      "label": "yellow"
+    },
+    {
+      "id": 4,
+      "label": "green"
+    },
+    {
+      "id": 5,
+      "label": "blue"
+    },
+    {
+      "id": 6,
+      "label": "darkBlue"
+    },
+    {
+      "id": 7,
+      "label": "purple"
+    },
+    {
+      "id": 8,
+      "label": "black"
+    },
+    {
+      "id": 9,
+      "label": "emerald"
     }
   ]
 }

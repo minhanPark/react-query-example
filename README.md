@@ -282,3 +282,151 @@ const { isIdle, data: projects } = useQuery(
 그러면 예시처럼 user를 불러왔을 때 userId의 값이 undefined 일 지 아니면 id가 담길 지 결정될 것인데 !!을 통해서 해당 값을 불린으로 바꾸어서 의존적인 마운트를 할 수 있다.
 
 > 만약 숫자 0 같은 falsy 값은 주의하자 !!을 붙이면 false가 될 것이다.
+
+## initialData 설정하기
+
+useQuery의 옵션중에는 initialData의 설정을 사용할 수 있음.  
+또 useQueryClient 훅을 통해서 쿼리 클라이언트에 접근할 수 있는데, 해당 인스턴스를 통해서 캐시에 접근해서 기본 데이터를 가져올 수도 있다.
+
+## 페이지네이션 구현하기
+
+json-server는 기본적으로 페이지네이션을 구현해서 보여준다.
+
+> http://localhost:4444/colors?\_limit=2&\_page=1
+
+위와 같이 작성하면 2개씩 나눠서 1페이지에 해당하는 데이터를 보여준다.  
+useQuery의 옵션 중에 **keepPreviousData 옵션**이 있는데, 해당 값을 true로 주면 새로운 데이터가 fetching될 때까지 이전 데이터를 유지할 수 있다.  
+기본적으로 query by id를 할 때 처럼 fetch함수 만들고 페이지에 맞게 요청하면 된다.
+
+## 무한 쿼리
+
+useInfiniteQuery를 사용한다.  
+![공식 문서 참고](https://react-query.tanstack.com/reference/useInfiniteQuery#_top)
+
+## useMutation 사용
+
+post 등의 요청은 useMutation 훅을 사용한다.
+
+```js
+export const addHeroFun = async (hero: any) => {
+  const { data } = await superHerosInstance.post("/superheros", hero);
+  return data;
+};
+```
+
+이러한 쿼리 함수가 있다고 해보자.  
+그러면 해당 함수를 이용해서 훅을 아래와 같이 만들 수 있다.
+
+```js
+export const useAddSuperHerosData = () => {
+  return useMutation(addHeroFun);
+};
+```
+
+사용할 때는 mutate 함수를 가지고 와서 사용하면 된다.
+
+```js
+const { mutate: addHero, isLoading: addLoading } = useAddSuperHerosData();
+
+const handleClick = () => {
+  console.log({ name, alterEgo, addLoading });
+  const hero = { name, alterEgo };
+  if (!addLoading) {
+    addHero(hero);
+  }
+};
+```
+
+race condition을 막으려면 로딩이 아닐때만 요청을 보내면 내가 연속으로 3번 누르더라도 요청을 막고 1번만 가는 것을 확인할 수 있다.
+
+## Invalidation from Mutations
+
+쿼리를 무효화 하는 것은 언제 사용할 것인지가 중요하다.  
+mutate 한 뒤에 쿼리 무효화를 하면 다시 쿼리를 불러오기 때문에 리스트 등이 바로 추가되는 것을 확인할 수 있다.
+
+```js
+export const useAddSuperHerosData = () => {
+  const queryClient = useQueryClient();
+  return useMutation(addHeroFun, {
+    onSuccess: () => {
+      queryClient.invalidateQueries("super-hero");
+    },
+  });
+};
+```
+
+해당 코드는 hero를 추가한 뒤(성공한 뒤)에 쿼리 클라이언트에 접근해 super-hero키를 가진 캐시를 지운다. 그러면 추가된 모습의 리스트가 보이는 것을 확인할 수 있다.
+
+## mutation의 response 다루기
+
+위에서 처럼 쿼리를 무효화하면 다시 get 요청이 일어난다. mutation의 response를 통해서 다시 get 요청을 하지 않고 리스트를 추가한 모습을 볼 수 있다.
+
+```js
+export const useAddSuperHerosData = () => {
+  const queryClient = useQueryClient();
+  return useMutation(addHeroFun, {
+    onSuccess: (data) => {
+      queryClient.setQueryData("super-hero", (oldQueryData: any) => {
+        return [...oldQueryData, data];
+      });
+    },
+  });
+};
+```
+
+onSuccess에는 post 성공 후 데이터가 담길 것이다.  
+setQueryData를 통해서 기존 쿼리 데이터를 받아올 수 있는데, 해당 쿼리 데이터에 onSuccess에 받아온 데이터를 넣어서 배열을 리턴해주면 다시 get 요청을 할 필요없이 데이터가 추가된 것을 확인할 수 있다.
+
+## Optimistic Update
+
+긍정적인 업데이트를 할 때는 onMutate, onError, onSettled를 사용한다.  
+**onMutate** 함수는 mutate 함수가 실행되기 전에 실행되며 mutate 함수가 받을 동일한 변수가 전달됩니다.  
+이 함수에서 반환된 값은 mutate 실패의 경우 onError 및 onSettled 함수 모두에 전달되며 낙관적 업데이트를 롤백하는 데 유용할 수 있습니다.
+
+**onSettled** 함수는 돌연변이가 성공적으로 가져오거나 오류가 발생하고 데이터 또는 오류가 전달될 때 실행됩니다.
+
+```js
+export const useAddSuperHerosData = () => {
+  const queryClient = useQueryClient();
+  return useMutation(addHeroFun, {
+    onMutate: async (newHero) => {
+      await queryClient.cancelQueries("super-hero");
+      const previousHeroData = queryClient.getQueryData("super-hero");
+      queryClient.setQueryData("super-hero", (oldQueryData: any) => {
+        return [...oldQueryData, { id: oldQueryData?.length + 1, ...newHero }];
+      });
+      return {
+        previousHeroData,
+      };
+    },
+    onError: (_error, _hero, context) => {
+      queryClient.setQueryData("super-hero", context?.previousHeroData);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries("super-hero");
+    },
+  });
+};
+```
+
+## axios 인터셉터 구현
+
+```js
+export const superHeroRequest = ({ ...options }) => {
+  superHerosInstance.defaults.headers.common.Authorization = "Bearer token";
+  const onSuccess = (response) => response;
+  const onError = (error) => {
+    return error;
+  };
+  return superHerosInstance(options).then(onSuccess).catch(onError);
+};
+```
+
+위와 같이 axios로 인터셉터를 구현해도 똑같이 사용하면 된다.
+
+```js
+export const heroFun = async () => {
+  const { data } = await superHeroRequest({ url: "/superheros" });
+  return data;
+};
+```

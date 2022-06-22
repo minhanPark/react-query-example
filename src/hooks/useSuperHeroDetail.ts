@@ -15,5 +15,13 @@ const heroDetailFun = async (anyway: any) => {
 };
 
 export const useSuperHerosDetailData = (heroId: string | undefined) => {
-  return useQuery<Hero, Error>(["super-hero", heroId], heroDetailFun);
+  return useQuery<Hero, Error>(["super-hero", heroId], heroDetailFun, {
+    initialData: () => {
+      return {
+        id: 4,
+        name: "RW",
+        alterEgo: "PARk",
+      };
+    },
+  });
 };

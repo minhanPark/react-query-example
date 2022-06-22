@@ -7,6 +7,8 @@ import styled from "styled-components";
 import SuperHeroDetail from "./Components/SuperHeroDetail";
 import Parallel from "./pages/Parallel";
 import Dependent from "./pages/Dependent";
+import Pagenated from "./pages/Pagenated";
+import Infinite from "./pages/Infinite";
 
 const StyledUl = styled.ul`
   display: flex;
@@ -38,6 +40,12 @@ function App() {
           <StyledLi>
             <Link to="/dependent">Dependent</Link>
           </StyledLi>
+          <StyledLi>
+            <Link to="/pagenated">Pagenated</Link>
+          </StyledLi>
+          <StyledLi>
+            <Link to="/infinite">Infinite</Link>
+          </StyledLi>
         </StyledUl>
       </nav>
       <Routes>
@@ -49,6 +57,8 @@ function App() {
           </Route>
           <Route path="/parallel" element={<Parallel />} />
           <Route path="/dependent" element={<Dependent />} />
+          <Route path="/pagenated" element={<Pagenated />} />
+          <Route path="/infinite" element={<Infinite />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
